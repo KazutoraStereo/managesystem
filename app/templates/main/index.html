@@ -1,0 +1,99 @@
+{% extends "main/base.html" %}
+{% block title %}首页{% endblock %}\
+{% block head %}
+    <script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.0/echarts.js"></script>
+{% endblock %}
+
+{% block body %}
+    <div id="main" style="width: 900px;height:470px;"></div>
+
+{% endblock %}
+{% block script %}
+    <script>
+        var a = echarts;
+        var myChart = a.init(document.getElementById('main'));
+        myChart.setOption({
+            title: {
+                text: '近10天借书还书人次汇总图'
+            },
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: {
+                data: ['今日数据']
+            },
+            toolbox: {
+                show: true,
+                feature: {
+                    mark: {show: true},
+                    dataView: {show: true, readOnly: false},
+                    magicType: {show: true, type: ['line', 'bar']}
+                }
+            },
+            calculable: true,
+
+            xAxis: [
+                {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: []
+                }
+            ],
+            yAxis: [
+                {
+                    type: 'value',
+                    axisLabel: {
+                        formatter: '{value}'
+                    }
+                }
+            ],
+            series: [
+                {
+                    name: '最多数量',
+                    type: 'line',
+                    data: [],
+                    markPoint: {
+                        data: [
+                            {type: 'max', name: '最大值'},
+                            {type: 'min', name: '最小值'}
+                        ]
+                    },
+                    markLine: {
+                        data: [
+                            {type: 'average', name: '平均值'}
+                        ]
+                    }
+                }]
+        });
+        myChart.showLoading();
+        var names = [];
+        var nums = [];
+        $.ajax({
+            type: "get",
+            url: "{{ url_for('main.echarts') }}",
+            dataType: "json",
+            success: function (data) {
+                if (data) {
+                    for (var i = 0; i < data.length; i++) {
+                        names.push(data[i]["name"]);
+                        nums.push(data[i]["num"]);
+                    }
+                    myChart.hideLoading();
+                    myChart.setOption({
+                        xAxis: {
+                            data: names
+                        },
+                        series: [{
+                            name: '数量',
+                            data: nums
+                        }]
+                    });
+                }
+            },
+            error: function (errorMsg) {
+                alert("图表请求数据失败!");
+                myChart.hideLoading();
+            }
+        })
+    </script>
+{% endblock %}
